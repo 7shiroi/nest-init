@@ -1,0 +1,78 @@
+generator client {
+  provider = "prisma-client-js"
+  output   = "../generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id        String   @id @default(uuid())
+  username  String   @unique
+  password  String
+  role      Role     @default(USER)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  apiLogs   ApiLog[]
+}
+
+// UTILITIES
+
+model ApiLog {
+  id        String   @id @default(uuid())
+  timestamp DateTime @default(now())
+
+  // Request Info
+  method      String
+  path        String
+  queryParams Json?
+  body        Json?
+  userAgent   String?
+  ipAddress   String
+  requestId   String
+
+  // User Info
+  userId String?
+  user   User?   @relation(fields: [userId], references: [id])
+
+  // Response Info
+  statusCode   Int
+  success      Boolean
+  message      String
+  responseTime Int
+  responseSize Int?
+  errorDetails Json?
+
+  @@index([timestamp])
+  @@index([userId])
+  @@index([path])
+  @@index([requestId])
+}
+
+enum AssetProvider {
+  LOCAL
+  SPACES
+}
+
+model Asset {
+  id        String        @id @default(uuid())
+  path      String
+  provider  AssetProvider
+  url       String
+  mimeType  String? // e.g., "image/jpeg", "image/png"
+  size      Int? // file size in bytes
+  createdAt DateTime      @default(now())
+  updatedAt DateTime      @updatedAt
+
+  // RELATIONS
+  // ADD NECESSARY RELATIONS HERE
+}
+
+// ENUMS
+
+enum Role {
+  ADMIN
+  USER
+}
